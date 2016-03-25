@@ -46,6 +46,7 @@
                         </group>
                         <group>
                             <field name="idp_metadata" />
+                            <field name="matching_attribute" />
                             <field name="sp_metadata" />
                             <field name="sp_pkey" />
                         </group>

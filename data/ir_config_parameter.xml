@@ -6,7 +6,7 @@
 
         <record id="allow_saml_uid_and_internal_password" model="ir.config_parameter">
             <field name="key">auth_saml.allow_saml.uid_and_internal_password</field>
-            <field name="value">0</field>
+            <field name="value">1</field>
         </record>
 
     </data>

@@ -85,11 +85,71 @@ class res_users(models.Model):
         try:
             login.acceptSso()
         except lasso.Error:
-            raise Exception('Invalid assertion')
+            raise Exception(
+                    'Invalid assertion : %s' % lasso.strError(error[0])
+            )
 
-        # TODO use a real token validation from LASSO
-        # TODO push into the validation result a real UPN
-        return {'user_id': login.assertion.subject.nameId.content}
+        attrs = {}
+
+        for att_statement in login.assertion.attributeStatement:
+            for attribute in att_statement.attribute:
+                name = None
+                lformat = lasso.SAML2_ATTRIBUTE_NAME_FORMAT_BASIC
+                nickname = None
+                try:
+                    name = attribute.name.decode('ascii')
+                except Exception as e:
+                    _logger.warning('sso_after_response: error decoding name of \
+                        attribute %s' % attribute.dump())
+                else:
+                    try:
+                        if attribute.nameFormat:
+                            lformat = attribute.nameFormat.decode('ascii')
+                        if attribute.friendlyName:
+                            nickname = attribute.friendlyName
+                    except Exception as e:
+                        message = 'sso_after_response: name or format of an \
+                            attribute failed to decode as ascii: %s due to %s'
+                        _logger.warning(message % (attribute.dump(), str(e)))
+                    try:
+                        if name:
+                            if lformat:
+                                if nickname:
+                                    key = (name, lformat, nickname)
+                                else:
+                                    key = (name, lformat)
+                            else:
+                                key = name
+                        attrs[key] = list()
+                        for value in attribute.attributeValue:
+                            content = [a.exportToXml() for a in value.any]
+                            content = ''.join(content)
+                            attrs[key].append(content.decode('utf8'))
+                    except Exception as e:
+                        message = 'sso_after_response: value of an \
+                            attribute failed to decode as ascii: %s due to %s'
+                        _logger.warning(message % (attribute.dump(), str(e)))
+
+        matching_attribute = p.matching_attribute
+        matching_value = None
+        
+        for k in attrs:
+            if isinstance(k, tuple) and k[0] == matching_attribute:
+                matching_value = attrs[k][0]
+                break
+
+        if not matching_value and matching_attribute == "subject.nameId":
+            matching_value = login.assertion.subject.nameId.content
+
+        elif not matching_value and matching_attribute != "subject.nameId":
+            raise Exception(
+                    "Matching attribute %s not found in user attrs: %s" % (
+                        matching_attribute,
+                        attrs,
+                    )
+            )
+
+        return {'user_id': matching_value}
 
     @api.multi
     def _auth_saml_signin(self, provider, validation, saml_response):

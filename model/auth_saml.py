@@ -54,7 +54,9 @@ class auth_saml_provider(models.Model):
     sp_pkey = fields.Text(
         'Private key of our service provider (this openerpserver)'
     )
+    matching_attribute = fields.Text('Matching Attribute')
     enabled = fields.Boolean('Enabled', default=False)
-    sequence = fields.Integer('Sequence')
+    
     css_class = fields.Char('CSS Class')
     body = fields.Char('Body')
+    sequence = fields.Integer('Sequence')
