@@ -1,7 +1,7 @@
 import functools
 import logging
 
-import simplejson
+import json
 import werkzeug.utils
 
 import openerp

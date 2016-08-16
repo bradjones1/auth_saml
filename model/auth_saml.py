@@ -2,7 +2,7 @@ from openerp import models
 from openerp import api
 from openerp import fields
 import lasso
-import simplejson
+import json
 
 
 class auth_saml_provider(models.Model):
