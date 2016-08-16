@@ -1,7 +1,8 @@
 import functools
 import logging
 
-import json
+import simplejson
+from simplejson import dumps
 import werkzeug.utils
 
 import openerp
@@ -136,7 +137,7 @@ class AuthSAMLController(http.Controller):
         # store a RelayState on the request to our IDP so that the IDP
         # can send us back this info alongside the obtained token
         params = {
-            "RelayState":  simplejson.dumps({
+            "RelayState":  dumps({
                 "d": request.session.db,
                 "p": pid,
             }),
